@@ -1,6 +1,6 @@
 /* ============================================
-   DEEPCOMMIT — Full Visible Map + Troll Player
-   v0.2.6  |  Pure Vanilla JS
+   DEEPCOMMIT — Class System
+   v0.3.0  |  Pure Vanilla JS
    ============================================ */
 
 (() => {
@@ -39,6 +39,37 @@
     "⌨": "#88aaff"
   };
 
+  const CLASSES = {
+    frontend: {
+      name: "Frontend",
+      maxHpBonus: 8,
+      atkBonus: 0,
+      startItem: { name: "Coffee", heal: 12 },
+      wallPhase: false
+    },
+    backend: {
+      name: "Backend",
+      maxHpBonus: 0,
+      atkBonus: 2,
+      startItem: null,
+      wallPhase: false
+    },
+    devops: {
+      name: "DevOps",
+      maxHpBonus: 4,
+      atkBonus: 1,
+      startItem: null,
+      wallPhase: true
+    },
+    fullstack: {
+      name: "Fullstack",
+      maxHpBonus: 5,
+      atkBonus: 1,
+      startItem: null,
+      wallPhase: false
+    }
+  };
+
   const DEATH_MESSAGES = [
     "You were consumed by technical debt.",
     "NullPointerException: Player not found.",
@@ -54,9 +85,12 @@
 
   // ====================== STATE ======================
   let game = null;
+  let selectedClass = null;
 
-  function createGame() {
-    return {
+  function createGame(classKey) {
+    const cls = CLASSES[classKey] || CLASSES.fullstack;
+
+    const g = {
       depth: 1,
       width: 33,
       height: 17,
@@ -64,21 +98,30 @@
       player: {
         x: 0,
         y: 0,
-        hp: 22,
-        maxHp: 22,
+        hp: 22 + cls.maxHpBonus,
+        maxHp: 22 + cls.maxHpBonus,
         level: 1,
         xp: 0,
         xpToNext: 14,
-        atk: 3,
+        atk: 3 + cls.atkBonus,
         stars: 0,
         inventory: [],
-        kills: 0
+        kills: 0,
+        className: cls.name,
+        canWallPhase: cls.wallPhase,
+        wallPhaseLeft: cls.wallPhase ? 1 : 0
       },
       entities: [],
       messages: [],
       turn: 0,
       over: false
     };
+
+    if (cls.startItem) {
+      g.player.inventory.push({ name: cls.startItem.name });
+    }
+
+    return g;
   }
 
   // ====================== MAP GENERATION ======================
@@ -134,7 +177,6 @@
       });
     }
 
-    // Connect rooms
     for (let i = 1; i < rooms.length; i++) {
       carveCorridor(map, rooms[i - 1], rooms[i]);
     }
@@ -142,11 +184,9 @@
       carveCorridor(map, rooms[0], rooms[Math.floor(rooms.length / 2)]);
     }
 
-    // Stairs
     const last = rooms[rooms.length - 1];
     map[last.cy][last.cx] = TILE.STAIRS;
 
-    // Player start
     const first = rooms[0];
     g.player.x = first.cx;
     g.player.y = first.cy;
@@ -190,7 +230,6 @@
       }
     }
 
-    // Shuffle
     for (let i = floors.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       const temp = floors[i];
@@ -202,7 +241,6 @@
     const monsterCount = 3 + depth + Math.floor(Math.random() * 2);
     const itemCount = 2 + Math.floor(Math.random() * 2);
 
-    // Monsters
     for (let i = 0; i < monsterCount && idx < floors.length; i++, idx++) {
       const pos = floors[idx];
       const roll = Math.random();
@@ -247,7 +285,6 @@
       g.entities.push(ent);
     }
 
-    // Items
     for (let i = 0; i < itemCount && idx < floors.length; i++, idx++) {
       const pos = floors[idx];
       const roll = Math.random();
@@ -277,7 +314,7 @@
     }
   }
 
-  // ====================== RENDER (FULL VISIBLE) ======================
+  // ====================== RENDER ======================
   function render(g) {
     const mapEl = document.getElementById("map");
     if (!mapEl) return;
@@ -288,7 +325,6 @@
         let char = g.map[y][x];
         let color = COLORS[char] || "#00ff41";
 
-        // Entity
         for (let i = 0; i < g.entities.length; i++) {
           const e = g.entities[i];
           if (e.x === x && e.y === y) {
@@ -298,7 +334,6 @@
           }
         }
 
-        // Player
         if (x === g.player.x && y === g.player.y) {
           char = TILE.PLAYER;
           color = COLORS["🧌"];
@@ -310,14 +345,12 @@
     }
     mapEl.innerHTML = html;
 
-    // Status
     safeSet("stat-depth", g.depth);
     safeSet("stat-hp", g.player.hp + "/" + g.player.maxHp);
     safeSet("stat-level", g.player.level);
     safeSet("stat-stars", g.player.stars);
     safeSet("stat-atk", g.player.atk);
 
-    // Inventory
     const inv = document.getElementById("inv-list");
     if (inv) {
       if (g.player.inventory.length === 0) {
@@ -331,7 +364,6 @@
       }
     }
 
-    // Messages
     const log = document.getElementById("message-log");
     if (log) {
       let msgHtml = "";
@@ -370,7 +402,16 @@
     const ny = g.player.y + dy;
 
     if (nx < 0 || nx >= g.width || ny < 0 || ny >= g.height) return;
-    if (g.map[ny][nx] === TILE.WALL) return;
+
+    // Wall collision + DevOps phase
+    if (g.map[ny][nx] === TILE.WALL) {
+      if (g.player.canWallPhase && g.player.wallPhaseLeft > 0) {
+        g.player.wallPhaseLeft--;
+        addMessage(g, "DevOps phase! Passed through wall.", "system");
+      } else {
+        return;
+      }
+    }
 
     // Attack
     let monster = null;
@@ -539,6 +580,12 @@
     g.depth++;
     addMessage(g, "Descending to depth " + g.depth + "...", "system");
     g.player.hp = Math.min(g.player.maxHp, g.player.hp + 4 + Math.floor(g.depth / 2));
+
+    // Reset DevOps wall phase
+    if (g.player.canWallPhase) {
+      g.player.wallPhaseLeft = 1;
+    }
+
     generateMap(g);
     render(g);
   }
@@ -570,6 +617,7 @@
         stars: g.player.stars,
         level: g.player.level,
         kills: g.player.kills,
+        className: g.player.className || "",
         date: new Date().toLocaleDateString()
       });
       scores.sort(function (a, b) {
@@ -591,7 +639,8 @@
       let html = "";
       for (let i = 0; i < scores.length; i++) {
         const s = scores[i];
-        html += '<div class="hs-row"><span>#' + (i + 1) + " Depth " + s.depth +
+        const cls = s.className ? " · " + s.className : "";
+        html += '<div class="hs-row"><span>#' + (i + 1) + " Depth " + s.depth + cls +
                 "</span><span>" + s.stars + " ★ · Lv" + s.level + "</span></div>";
       }
       el.innerHTML = html;
@@ -614,12 +663,18 @@
     }
   }
 
-  function startNewGame() {
-    game = createGame();
+  function startNewGame(classKey) {
+    game = createGame(classKey);
     generateMap(game);
     game.messages = [];
+    addMessage(game, "Class: " + game.player.className, "system");
     addMessage(game, "Welcome to DEEPCOMMIT. Survive the codebase.", "system");
     addMessage(game, "Find the stairs > to descend deeper.", "system");
+
+    if (game.player.canWallPhase) {
+      addMessage(game, "DevOps skill: Phase through 1 wall per depth.", "system");
+    }
+
     render(game);
     showScreen("game-screen");
   }
@@ -650,18 +705,50 @@
     if (el) el.addEventListener("click", fn);
   }
 
-  bind("btn-new-game", startNewGame);
-  bind("btn-retry", startNewGame);
-  bind("btn-title", function () { showScreen("title-screen"); });
-  bind("btn-how-to", function () { showScreen("howto-screen"); });
-  bind("btn-back-howto", function () { showScreen("title-screen"); });
+  // Title → Class Select
+  bind("btn-new-game", function () {
+    showScreen("class-screen");
+  });
+
+  // Class buttons
+  const classBtns = document.querySelectorAll(".class-btn");
+  for (let i = 0; i < classBtns.length; i++) {
+    classBtns[i].addEventListener("click", function () {
+      const cls = this.getAttribute("data-class");
+      startNewGame(cls);
+    });
+  }
+
+  bind("btn-back-class", function () {
+    showScreen("title-screen");
+  });
+
+  bind("btn-retry", function () {
+    showScreen("class-screen");
+  });
+
+  bind("btn-title", function () {
+    showScreen("title-screen");
+  });
+
+  bind("btn-how-to", function () {
+    showScreen("howto-screen");
+  });
+
+  bind("btn-back-howto", function () {
+    showScreen("title-screen");
+  });
+
   bind("btn-highscores", function () {
     renderHighscores();
     showScreen("highscore-screen");
   });
-  bind("btn-back-hs", function () { showScreen("title-screen"); });
 
-  // D-Pad buttons
+  bind("btn-back-hs", function () {
+    showScreen("title-screen");
+  });
+
+  // D-Pad
   const dpadButtons = document.querySelectorAll(".dpad-btn");
   for (let i = 0; i < dpadButtons.length; i++) {
     dpadButtons[i].addEventListener("click", function () {
