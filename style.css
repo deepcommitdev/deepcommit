@@ -1,6 +1,6 @@
 /* ============================================
-   DEEPCOMMIT — Mobile Optimized + D-Pad
-   v0.2.4
+   DEEPCOMMIT — Full Visible Map + Fixed D-Pad
+   v0.2.6
    ============================================ */
 
 *,
@@ -158,7 +158,7 @@ h2 {
 
 .howto-content .sym {
   display: inline-block;
-  width: 16px;
+  width: 20px;
   text-align: center;
   font-weight: bold;
 }
@@ -198,10 +198,11 @@ h2 {
 
 /* ========== GAME SCREEN ========== */
 #game-screen {
-  padding: 4px;
+  padding: 4px 4px 12px 4px;
   align-items: stretch;
   overscroll-behavior: none;
   touch-action: none;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
 }
 
 .game-layout {
@@ -220,16 +221,16 @@ h2 {
   align-items: center;
   justify-content: center;
   padding: 4px;
-  min-height: 32vh;
-  max-height: 38vh;
+  min-height: 30vh;
+  max-height: 36vh;
   touch-action: none;
   overscroll-behavior: none;
 }
 
 #map {
   font-size: 12px;
-  line-height: 1.08;
-  letter-spacing: 0.2px;
+  line-height: 1.1;
+  letter-spacing: 0.5px;
   margin: 0;
   white-space: pre;
   color: var(--green);
@@ -332,14 +333,14 @@ h2 {
 .message-log .msg.important { color: var(--yellow); }
 .message-log .msg.system { color: var(--cyan); }
 
-/* D-Pad */
+/* D-Pad - Fixed so bottom arrow always visible */
 .dpad {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   margin-top: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   user-select: none;
   -webkit-user-select: none;
   flex-shrink: 0;
@@ -347,12 +348,12 @@ h2 {
 
 .dpad-middle {
   display: flex;
-  gap: 46px;
+  gap: 44px;
 }
 
 .dpad-btn {
-  width: 54px;
-  height: 54px;
+  width: 52px;
+  height: 52px;
   background: #0a1a0a;
   border: 1px solid var(--green);
   color: var(--green);
