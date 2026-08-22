@@ -146,6 +146,13 @@ deepcommit/
 
 ---
 
+## Credits
+
+- Game by [@deepcommit](https://x.com/deepcommit)
+- Built with pure Vanilla JS
+
+---
+
 ## License
 
 MIT License — feel free to fork, modify, and build upon it.
@@ -153,6 +160,6 @@ MIT License — feel free to fork, modify, and build upon it.
 ---
 
 <p align="center">
-  Made with caffeine and technical debt by <a href="https://github.com/deepcommitdev">deepcommitdev</a>
+  Made with caffeine and technical debt by <a href="https://x.com/deepcommit">@deepcommit</a>
 </p>
 ```
