@@ -1,6 +1,6 @@
 /* ============================================
    DEEPCOMMIT — Super Advanced ASCII Roguelike
-   v0.2.0  |  Pure Vanilla JS  |  No dependencies
+   v0.2.1  |  Pure Vanilla JS  |  Fixed
    ============================================ */
 
 (() => {
@@ -114,29 +114,31 @@
       }
       if (overlaps) continue;
 
-      // Carve room
       for (let y = ry; y < ry + rh; y++) {
         for (let x = rx; x < rx + rw; x++) {
           map[y][x] = TILE.FLOOR;
         }
       }
-      rooms.push({ x: rx, y: ry, w: rw, h: rh, cx: Math.floor(rx + rw / 2), cy: Math.floor(ry + rh / 2) });
+      rooms.push({
+        x: rx,
+        y: ry,
+        w: rw,
+        h: rh,
+        cx: Math.floor(rx + rw / 2),
+        cy: Math.floor(ry + rh / 2),
+      });
     }
 
-    // Connect rooms (MST-like simple chain + some extra)
     for (let i = 1; i < rooms.length; i++) {
       carveCorridor(map, rooms[i - 1], rooms[i]);
     }
-    // Extra connections for more interesting layout
     if (rooms.length > 3) {
       carveCorridor(map, rooms[0], rooms[Math.floor(rooms.length / 2)]);
     }
 
-    // Place stairs in last room
     const last = rooms[rooms.length - 1];
     map[last.cy][last.cx] = TILE.STAIRS;
 
-    // Place player in first room
     const first = rooms[0];
     g.player.x = first.cx;
     g.player.y = first.cy;
@@ -176,15 +178,13 @@
       for (let x = 0; x < g.width; x++) {
         if (
           g.map[y][x] === TILE.FLOOR &&
-          !(x === g.player.x && y === g.player.y) &&
-          g.map[y][x] !== TILE.STAIRS
+          !(x === g.player.x && y === g.player.y)
         ) {
           floors.push({ x, y });
         }
       }
     }
 
-    // Shuffle
     for (let i = floors.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [floors[i], floors[j]] = [floors[j], floors[i]];
@@ -194,73 +194,117 @@
     const monsterCount = 4 + depth + Math.floor(Math.random() * 3);
     const itemCount = 2 + Math.floor(Math.random() * 3);
 
-    // Monsters
     for (let i = 0; i < monsterCount && idx < floors.length; i++, idx++) {
       const pos = floors[idx];
       const roll = Math.random();
       let ent;
 
       if (depth >= 5 && roll < 0.08) {
-        // Rare: Infinite Loop
         ent = {
-          x: pos.x, y: pos.y, char: TILE.LOOP,
-          name: "Infinite Loop", hp: 18 + depth * 2, maxHp: 18 + depth * 2,
-          atk: 4 + depth, xp: 18, isMonster: true, special: "loop"
+          x: pos.x,
+          y: pos.y,
+          char: TILE.LOOP,
+          name: "Infinite Loop",
+          hp: 18 + depth * 2,
+          maxHp: 18 + depth * 2,
+          atk: 4 + depth,
+          xp: 18,
+          isMonster: true,
+          special: "loop",
         };
       } else if (depth >= 3 && roll < 0.18) {
-        // NullPointer
         ent = {
-          x: pos.x, y: pos.y, char: TILE.NULL,
-          name: "NullPointer", hp: 12 + depth * 2, maxHp: 12 + depth * 2,
-          atk: 3 + Math.floor(depth / 2), xp: 12, isMonster: true, special: "null"
+          x: pos.x,
+          y: pos.y,
+          char: TILE.NULL,
+          name: "NullPointer",
+          hp: 12 + depth * 2,
+          maxHp: 12 + depth * 2,
+          atk: 3 + Math.floor(depth / 2),
+          xp: 12,
+          isMonster: true,
+          special: "null",
         };
-      } else if (roll < 0.50) {
+      } else if (roll < 0.5) {
         ent = {
-          x: pos.x, y: pos.y, char: TILE.BUG,
-          name: "Bug", hp: 5 + depth, maxHp: 5 + depth,
-          atk: 1 + Math.floor(depth / 2), xp: 4, isMonster: true
+          x: pos.x,
+          y: pos.y,
+          char: TILE.BUG,
+          name: "Bug",
+          hp: 5 + depth,
+          maxHp: 5 + depth,
+          atk: 1 + Math.floor(depth / 2),
+          xp: 4,
+          isMonster: true,
         };
-      } else if (roll < 0.80) {
+      } else if (roll < 0.8) {
         ent = {
-          x: pos.x, y: pos.y, char: TILE.MERGE,
-          name: "Merge Conflict", hp: 9 + depth * 2, maxHp: 9 + depth * 2,
-          atk: 2 + Math.floor(depth / 2), xp: 7, isMonster: true
+          x: pos.x,
+          y: pos.y,
+          char: TILE.MERGE,
+          name: "Merge Conflict",
+          hp: 9 + depth * 2,
+          maxHp: 9 + depth * 2,
+          atk: 2 + Math.floor(depth / 2),
+          xp: 7,
+          isMonster: true,
         };
       } else {
         ent = {
-          x: pos.x, y: pos.y, char: TILE.LEAK,
-          name: "Memory Leak", hp: 7 + depth, maxHp: 7 + depth,
-          atk: 3 + depth, xp: 9, isMonster: true
+          x: pos.x,
+          y: pos.y,
+          char: TILE.LEAK,
+          name: "Memory Leak",
+          hp: 7 + depth,
+          maxHp: 7 + depth,
+          atk: 3 + depth,
+          xp: 9,
+          isMonster: true,
         };
       }
       g.entities.push(ent);
     }
 
-    // Items
     for (let i = 0; i < itemCount && idx < floors.length; i++, idx++) {
       const pos = floors[idx];
       const roll = Math.random();
 
       if (roll < 0.45) {
         g.entities.push({
-          x: pos.x, y: pos.y, char: TILE.COMMIT,
-          name: "Commit", heal: 7 + depth * 2, stars: 1 + Math.floor(depth / 2),
-          isItem: true
+          x: pos.x,
+          y: pos.y,
+          char: TILE.COMMIT,
+          name: "Commit",
+          heal: 7 + depth * 2,
+          stars: 1 + Math.floor(depth / 2),
+          isItem: true,
         });
       } else if (roll < 0.75) {
         g.entities.push({
-          x: pos.x, y: pos.y, char: TILE.STAR,
-          name: "Star", stars: 4 + depth, isItem: true
+          x: pos.x,
+          y: pos.y,
+          char: TILE.STAR,
+          name: "Star",
+          stars: 4 + depth,
+          isItem: true,
         });
-      } else if (roll < 0.90) {
+      } else if (roll < 0.9) {
         g.entities.push({
-          x: pos.x, y: pos.y, char: TILE.COFFEE,
-          name: "Coffee", heal: 12 + depth, isItem: true
+          x: pos.x,
+          y: pos.y,
+          char: TILE.COFFEE,
+          name: "Coffee",
+          heal: 12 + depth,
+          isItem: true,
         });
       } else {
         g.entities.push({
-          x: pos.x, y: pos.y, char: TILE.KEYBOARD,
-          name: "Mechanical Keyboard", atkBonus: 1, isItem: true
+          x: pos.x,
+          y: pos.y,
+          char: TILE.KEYBOARD,
+          name: "Mechanical Keyboard",
+          atkBonus: 1,
+          isItem: true,
         });
       }
     }
@@ -294,14 +338,21 @@
     let sx = x0 < x1 ? 1 : -1;
     let sy = y0 < y1 ? 1 : -1;
     let err = dx - dy;
-    let x = x0, y = y0;
+    let x = x0,
+      y = y0;
 
     while (true) {
       if (x === x1 && y === y1) return true;
       if (g.map[y][x] === TILE.WALL && !(x === x0 && y === y0)) return false;
       const e2 = 2 * err;
-      if (e2 > -dy) { err -= dy; x += sx; }
-      if (e2 < dx) { err += dx; y += sy; }
+      if (e2 > -dy) {
+        err -= dy;
+        x += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y += sy;
+      }
     }
   }
 
@@ -326,7 +377,7 @@
           char = g.map[y][x];
           color = COLORS[char] || "#00ff41";
 
-          const ent = g.entities.find(e => e.x === x && e.y === y);
+          const ent = g.entities.find((e) => e.x === x && e.y === y);
           if (ent) {
             char = ent.char;
             color = COLORS[ent.char] || "#fff";
@@ -337,7 +388,7 @@
             color = COLORS[TILE.PLAYER];
           }
         }
-        html += `<span style="color:\( {color}"> \){char}</span>`;
+        html += '<span style="color:' + color + '">' + char + "</span>";
       }
       html += "\n";
     }
@@ -345,7 +396,7 @@
 
     // Status
     safeSet("stat-depth", g.depth);
-    safeSet("stat-hp", `\( {g.player.hp}/ \){g.player.maxHp}`);
+    safeSet("stat-hp", g.player.hp + "/" + g.player.maxHp);
     safeSet("stat-level", g.player.level);
     safeSet("stat-stars", g.player.stars);
     safeSet("stat-atk", g.player.atk);
@@ -353,17 +404,27 @@
     // Inventory
     const inv = document.getElementById("inv-list");
     if (inv) {
-      inv.innerHTML = g.player.inventory.length === 0
-        ? `<span style="color:#003b0f">empty</span>`
-        : g.player.inventory.map(i => i.name).join("<br>");
+      inv.innerHTML =
+        g.player.inventory.length === 0
+          ? '<span style="color:#003b0f">empty</span>'
+          : g.player.inventory.map((i) => i.name).join("<br>");
     }
 
     // Messages
     const log = document.getElementById("message-log");
     if (log) {
-      log.innerHTML = g.messages.slice(-6).map(m =>
-        `<div class="msg \( {m.type || ""}"> \){escapeHtml(m.text)}</div>`
-      ).join("");
+      log.innerHTML = g.messages
+        .slice(-6)
+        .map(function (m) {
+          return (
+            '<div class="msg ' +
+            (m.type || "") +
+            '">' +
+            escapeHtml(m.text) +
+            "</div>"
+          );
+        })
+        .join("");
       log.scrollTop = log.scrollHeight;
     }
   }
@@ -380,8 +441,9 @@
       .replace(/>/g, "&gt;");
   }
 
-  function addMessage(g, text, type = "") {
-    g.messages.push({ text, type, t: Date.now() });
+  function addMessage(g, text, type) {
+    type = type || "";
+    g.messages.push({ text: text, type: type, t: Date.now() });
     if (g.messages.length > 40) g.messages.shift();
   }
 
@@ -396,28 +458,40 @@
     if (g.map[ny][nx] === TILE.WALL) return;
 
     // Attack monster
-    const monster = g.entities.find(e => e.isMonster && e.x === nx && e.y === ny);
+    const monster = g.entities.find(function (e) {
+      return e.isMonster && e.x === nx && e.y === ny;
+    });
+
     if (monster) {
       const dmg = g.player.atk + Math.floor(Math.random() * 3);
       monster.hp -= dmg;
-      addMessage(g, `You hit the ${monster.name} for ${dmg}!`, "damage");
+      addMessage(g, "You hit the " + monster.name + " for " + dmg + "!", "damage");
 
       if (monster.hp <= 0) {
-        addMessage(g, `You destroyed the \( {monster.name}! + \){monster.xp} XP`, "important");
+        addMessage(
+          g,
+          "You destroyed the " + monster.name + "! +" + monster.xp + " XP",
+          "important"
+        );
         g.player.xp += monster.xp;
         g.player.stars += 1;
         g.player.kills += 1;
-        g.entities = g.entities.filter(e => e !== monster);
+        g.entities = g.entities.filter(function (e) {
+          return e !== monster;
+        });
         checkLevelUp(g);
       } else {
-        // Counter attack
         let mdmg = monster.atk;
         if (monster.special === "null" && Math.random() < 0.25) {
           mdmg = Math.floor(mdmg * 1.6);
-          addMessage(g, `NullPointer critical!`, "damage");
+          addMessage(g, "NullPointer critical!", "damage");
         }
         g.player.hp -= mdmg;
-        addMessage(g, `The ${monster.name} hits you for ${mdmg}!`, "damage");
+        addMessage(
+          g,
+          "The " + monster.name + " hits you for " + mdmg + "!",
+          "damage"
+        );
         if (g.player.hp <= 0) {
           playerDied(g);
           return;
@@ -435,23 +509,36 @@
     g.player.y = ny;
 
     // Pickup
-    const item = g.entities.find(e => e.isItem && e.x === nx && e.y === ny);
+    const item = g.entities.find(function (e) {
+      return e.isItem && e.x === nx && e.y === ny;
+    });
+
     if (item) {
       if (item.heal) {
         const before = g.player.hp;
         g.player.hp = Math.min(g.player.maxHp, g.player.hp + item.heal);
-        addMessage(g, `You used \( {item.name}. + \){g.player.hp - before} HP`, "heal");
+        addMessage(
+          g,
+          "You used " + item.name + ". +" + (g.player.hp - before) + " HP",
+          "heal"
+        );
       }
       if (item.stars) {
         g.player.stars += item.stars;
-        addMessage(g, `Collected ${item.stars} ★`, "important");
+        addMessage(g, "Collected " + item.stars + " ★", "important");
       }
       if (item.atkBonus) {
         g.player.atk += item.atkBonus;
         g.player.inventory.push({ name: item.name });
-        addMessage(g, `Equipped \( {item.name}! ATK + \){item.atkBonus}`, "important");
+        addMessage(
+          g,
+          "Equipped " + item.name + "! ATK +" + item.atkBonus,
+          "important"
+        );
       }
-      g.entities = g.entities.filter(e => e !== item);
+      g.entities = g.entities.filter(function (e) {
+        return e !== item;
+      });
     }
 
     // Stairs
@@ -467,17 +554,21 @@
   }
 
   function monstersAct(g) {
-    for (const m of g.entities.filter(e => e.isMonster)) {
-      const dist = Math.abs(m.x - g.player.x) + Math.abs(m.y - g.player.y);
+    const monsters = g.entities.filter(function (e) {
+      return e.isMonster;
+    });
+
+    for (let i = 0; i < monsters.length; i++) {
+      const m = monsters[i];
+      const dist =
+        Math.abs(m.x - g.player.x) + Math.abs(m.y - g.player.y);
       if (dist > 9) continue;
 
-      // Special: Infinite Loop sometimes skips turn (confusing)
       if (m.special === "loop" && Math.random() < 0.2) continue;
 
       let dx = Math.sign(g.player.x - m.x);
       let dy = Math.sign(g.player.y - m.y);
 
-      // Prefer one axis randomly
       if (Math.random() < 0.5) {
         if (dx !== 0) dy = 0;
       } else {
@@ -490,14 +581,17 @@
       if (nx < 0 || nx >= g.width || ny < 0 || ny >= g.height) continue;
       if (g.map[ny][nx] === TILE.WALL) continue;
 
-      // Attack player
       if (nx === g.player.x && ny === g.player.y) {
         let mdmg = m.atk;
         if (m.special === "null" && Math.random() < 0.2) {
           mdmg = Math.floor(mdmg * 1.5);
         }
         g.player.hp -= mdmg;
-        addMessage(g, `The ${m.name} hits you for ${mdmg}!`, "damage");
+        addMessage(
+          g,
+          "The " + m.name + " hits you for " + mdmg + "!",
+          "damage"
+        );
         if (g.player.hp <= 0) {
           playerDied(g);
           return;
@@ -505,8 +599,10 @@
         continue;
       }
 
-      // Occupied?
-      if (g.entities.some(e => e.x === nx && e.y === ny)) continue;
+      const occupied = g.entities.some(function (e) {
+        return e.x === nx && e.y === ny;
+      });
+      if (occupied) continue;
 
       m.x = nx;
       m.y = ny;
@@ -521,14 +617,21 @@
       g.player.hp = g.player.maxHp;
       g.player.atk += 1;
       g.player.xpToNext = Math.floor(g.player.xpToNext * 1.45);
-      addMessage(g, `★ LEVEL UP! You are now level ${g.player.level}`, "important");
+      addMessage(
+        g,
+        "★ LEVEL UP! You are now level " + g.player.level,
+        "important"
+      );
     }
   }
 
   function descend(g) {
     g.depth++;
-    addMessage(g, `Descending to depth ${g.depth}...`, "system");
-    g.player.hp = Math.min(g.player.maxHp, g.player.hp + 4 + Math.floor(g.depth / 2));
+    addMessage(g, "Descending to depth " + g.depth + "...", "system");
+    g.player.hp = Math.min(
+      g.player.maxHp,
+      g.player.hp + 4 + Math.floor(g.depth / 2)
+    );
     generateMap(g);
     updateFOV(g);
     render(g);
@@ -541,7 +644,10 @@
     saveHighscore(g);
 
     const deathEl = document.getElementById("death-message");
-    if (deathEl) deathEl.textContent = DEATH_MESSAGES[Math.floor(Math.random() * DEATH_MESSAGES.length)];
+    if (deathEl) {
+      deathEl.textContent =
+        DEATH_MESSAGES[Math.floor(Math.random() * DEATH_MESSAGES.length)];
+    }
 
     safeSet("final-depth", g.depth);
     safeSet("final-stars", g.player.stars);
@@ -553,7 +659,9 @@
   // ====================== HIGHSCORE ======================
   function saveHighscore(g) {
     try {
-      const scores = JSON.parse(localStorage.getItem("deepcommit_hs") || "[]");
+      const scores = JSON.parse(
+        localStorage.getItem("deepcommit_hs") || "[]"
+      );
       scores.push({
         depth: g.depth,
         stars: g.player.stars,
@@ -561,8 +669,13 @@
         kills: g.player.kills,
         date: new Date().toLocaleDateString(),
       });
-      scores.sort((a, b) => b.stars - a.stars || b.depth - a.depth);
-      localStorage.setItem("deepcommit_hs", JSON.stringify(scores.slice(0, 12)));
+      scores.sort(function (a, b) {
+        return b.stars - a.stars || b.depth - a.depth;
+      });
+      localStorage.setItem(
+        "deepcommit_hs",
+        JSON.stringify(scores.slice(0, 12))
+      );
     } catch (e) {}
   }
 
@@ -570,25 +683,41 @@
     const el = document.getElementById("highscore-list");
     if (!el) return;
     try {
-      const scores = JSON.parse(localStorage.getItem("deepcommit_hs") || "[]");
+      const scores = JSON.parse(
+        localStorage.getItem("deepcommit_hs") || "[]"
+      );
       if (scores.length === 0) {
-        el.innerHTML = `<div class="empty">No runs yet. Go make history.</div>`;
+        el.innerHTML =
+          '<div class="empty">No runs yet. Go make history.</div>';
         return;
       }
-      el.innerHTML = scores.map((s, i) =>
-        `<div class="hs-row"><span>#${i + 1} Depth \( {s.depth}</span><span> \){s.stars} ★ · Lv${s.level}</span></div>`
-      ).join("");
+      el.innerHTML = scores
+        .map(function (s, i) {
+          return (
+            '<div class="hs-row"><span>#' +
+            (i + 1) +
+            " Depth " +
+            s.depth +
+            "</span><span>" +
+            s.stars +
+            " ★ · Lv" +
+            s.level +
+            "</span></div>"
+          );
+        })
+        .join("");
     } catch (e) {
-      el.innerHTML = `<div class="empty">Error loading scores.</div>`;
+      el.innerHTML = '<div class="empty">Error loading scores.</div>';
     }
   }
 
   // ====================== SCREENS ======================
   function showScreen(id) {
-    document.querySelectorAll(".screen").forEach(s => {
-      s.classList.remove("active");
-      s.hidden = true;
-    });
+    const screens = document.querySelectorAll(".screen");
+    for (let i = 0; i < screens.length; i++) {
+      screens[i].classList.remove("active");
+      screens[i].hidden = true;
+    }
     const target = document.getElementById(id);
     if (target) {
       target.classList.add("active");
@@ -608,50 +737,82 @@
   }
 
   // ====================== INPUT ======================
-  document.addEventListener("keydown", (e) => {
+  document.addEventListener("keydown", function (e) {
     if (!game || game.over) return;
     const gameScreen = document.getElementById("game-screen");
     if (!gameScreen || !gameScreen.classList.contains("active")) return;
 
-    let dx = 0, dy = 0;
+    let dx = 0,
+      dy = 0;
     switch (e.key) {
-      case "ArrowUp": case "w": case "W": case "k": dy = -1; break;
-      case "ArrowDown": case "s": case "S": case "j": dy = 1; break;
-      case "ArrowLeft": case "a": case "A": case "h": dx = -1; break;
-      case "ArrowRight": case "d": case "D": case "l": dx = 1; break;
-      default: return;
+      case "ArrowUp":
+      case "w":
+      case "W":
+      case "k":
+        dy = -1;
+        break;
+      case "ArrowDown":
+      case "s":
+      case "S":
+      case "j":
+        dy = 1;
+        break;
+      case "ArrowLeft":
+      case "a":
+      case "A":
+      case "h":
+        dx = -1;
+        break;
+      case "ArrowRight":
+      case "d":
+      case "D":
+      case "l":
+        dx = 1;
+        break;
+      default:
+        return;
     }
     e.preventDefault();
     tryMove(game, dx, dy);
   });
 
   // Touch / swipe
-  let touchStartX = 0, touchStartY = 0;
-  document.addEventListener("touchstart", (e) => {
-    if (e.touches.length === 1) {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-    }
-  }, { passive: true });
+  let touchStartX = 0,
+    touchStartY = 0;
 
-  document.addEventListener("touchend", (e) => {
-    if (!game || game.over) return;
-    const gameScreen = document.getElementById("game-screen");
-    if (!gameScreen || !gameScreen.classList.contains("active")) return;
+  document.addEventListener(
+    "touchstart",
+    function (e) {
+      if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    },
+    { passive: true }
+  );
 
-    const touch = e.changedTouches[0];
-    const dx = touch.clientX - touchStartX;
-    const dy = touch.clientY - touchStartY;
-    const absX = Math.abs(dx);
-    const absY = Math.abs(dy);
-    if (Math.max(absX, absY) < 28) return;
+  document.addEventListener(
+    "touchend",
+    function (e) {
+      if (!game || game.over) return;
+      const gameScreen = document.getElementById("game-screen");
+      if (!gameScreen || !gameScreen.classList.contains("active")) return;
 
-    if (absX > absY) {
-      tryMove(game, dx > 0 ? 1 : -1, 0);
-    } else {
-      tryMove(game, 0, dy > 0 ? 1 : -1);
-    }
-  }, { passive: true });
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      if (Math.max(absX, absY) < 28) return;
+
+      if (absX > absY) {
+        tryMove(game, dx > 0 ? 1 : -1, 0);
+      } else {
+        tryMove(game, 0, dy > 0 ? 1 : -1);
+      }
+    },
+    { passive: true }
+  );
 
   // ====================== BUTTONS ======================
   function bind(id, fn) {
@@ -661,16 +822,28 @@
 
   bind("btn-new-game", startNewGame);
   bind("btn-retry", startNewGame);
-  bind("btn-title", () => showScreen("title-screen"));
-  bind("btn-how-to", () => showScreen("howto-screen"));
-  bind("btn-back-howto", () => showScreen("title-screen"));
-  bind("btn-highscores", () => {
+  bind("btn-title", function () {
+    showScreen("title-screen");
+  });
+  bind("btn-how-to", function () {
+    showScreen("howto-screen");
+  });
+  bind("btn-back-howto", function () {
+    showScreen("title-screen");
+  });
+  bind("btn-highscores", function () {
     renderHighscores();
     showScreen("highscore-screen");
   });
-  bind("btn-back-hs", () => showScreen("title-screen"));
+  bind("btn-back-hs", function () {
+    showScreen("title-screen");
+  });
 
   // Expose for debugging
-  window.DEEPCOMMIT = { startNewGame, getGame: () => game };
-
+  window.DEEPCOMMIT = {
+    startNewGame: startNewGame,
+    getGame: function () {
+      return game;
+    },
+  };
 })();
