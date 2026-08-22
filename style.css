@@ -1,6 +1,6 @@
 /* ============================================
-   DEEPCOMMIT — Full Visible Map + Fixed D-Pad
-   v0.2.6
+   DEEPCOMMIT — Class System
+   v0.3.0
    ============================================ */
 
 *,
@@ -135,6 +135,64 @@ html, body {
   margin-top: 28px;
   font-size: 11px;
   color: var(--green-dark);
+}
+
+/* ========== CLASS SELECT ========== */
+#class-screen h2 {
+  font-size: 18px;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+  text-shadow: 0 0 8px var(--green-glow);
+}
+
+.class-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 18px;
+}
+
+.class-btn {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  color: var(--green);
+  font-family: inherit;
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.class-btn:hover,
+.class-btn:focus-visible {
+  border-color: var(--green);
+  background: #0d1a0d;
+  outline: none;
+}
+
+.class-btn:active {
+  background: var(--green);
+  color: #000;
+}
+
+.class-name {
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.class-desc {
+  font-size: 12px;
+  color: var(--green-dim);
+  line-height: 1.4;
+}
+
+.class-btn:active .class-desc {
+  color: #003b0f;
 }
 
 /* ========== HOW TO / HIGHSCORE ========== */
@@ -333,7 +391,7 @@ h2 {
 .message-log .msg.important { color: var(--yellow); }
 .message-log .msg.system { color: var(--cyan); }
 
-/* D-Pad - Fixed so bottom arrow always visible */
+/* D-Pad */
 .dpad {
   display: flex;
   flex-direction: column;
@@ -460,6 +518,10 @@ h2 {
 
   .tutorial-bar {
     display: none;
+  }
+
+  .class-list {
+    max-width: 340px;
   }
 }
 
