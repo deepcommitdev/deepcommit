@@ -1,6 +1,6 @@
 /* ============================================
-   DEEPCOMMIT — Class System
-   v0.3.0  |  Pure Vanilla JS
+   DEEPCOMMIT — Save + Sound
+   v0.3.1  |  Pure Vanilla JS
    ============================================ */
 
 (() => {
@@ -83,9 +83,87 @@
     "404 — Will to live not found."
   ];
 
+  const SAVE_KEY = "deepcommit_save";
+
+  // ====================== SOUND ======================
+  let audioCtx = null;
+
+  function getAudio() {
+    if (!audioCtx) {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        return null;
+      }
+    }
+    return audioCtx;
+  }
+
+  function playTone(freq, duration, type, volume) {
+    const ctx = getAudio();
+    if (!ctx) return;
+
+    if (ctx.state === "suspended") {
+      ctx.resume();
+    }
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type || "square";
+    osc.frequency.value = freq;
+    gain.gain.value = volume || 0.08;
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    const now = ctx.currentTime;
+    gain.gain.setValueAtTime(volume || 0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+
+  function sfx(name) {
+    switch (name) {
+      case "click":
+        playTone(600, 0.05, "square", 0.06);
+        break;
+      case "move":
+        playTone(180, 0.04, "triangle", 0.04);
+        break;
+      case "hit":
+        playTone(320, 0.08, "square", 0.09);
+        break;
+      case "hurt":
+        playTone(140, 0.12, "sawtooth", 0.1);
+        break;
+      case "pickup":
+        playTone(520, 0.1, "sine", 0.08);
+        setTimeout(function () { playTone(720, 0.08, "sine", 0.06); }, 60);
+        break;
+      case "levelup":
+        playTone(400, 0.1, "square", 0.08);
+        setTimeout(function () { playTone(550, 0.1, "square", 0.08); }, 80);
+        setTimeout(function () { playTone(700, 0.15, "square", 0.08); }, 160);
+        break;
+      case "descend":
+        playTone(300, 0.15, "triangle", 0.07);
+        setTimeout(function () { playTone(220, 0.2, "triangle", 0.06); }, 100);
+        break;
+      case "death":
+        playTone(200, 0.3, "sawtooth", 0.12);
+        setTimeout(function () { playTone(120, 0.4, "sawtooth", 0.1); }, 150);
+        break;
+      case "phase":
+        playTone(480, 0.12, "sine", 0.07);
+        break;
+    }
+  }
+
   // ====================== STATE ======================
   let game = null;
-  let selectedClass = null;
 
   function createGame(classKey) {
     const cls = CLASSES[classKey] || CLASSES.fullstack;
@@ -108,6 +186,7 @@
         inventory: [],
         kills: 0,
         className: cls.name,
+        classKey: classKey,
         canWallPhase: cls.wallPhase,
         wallPhaseLeft: cls.wallPhase ? 1 : 0
       },
@@ -122,6 +201,56 @@
     }
 
     return g;
+  }
+
+  // ====================== SAVE / LOAD ======================
+  function saveGame() {
+    if (!game || game.over) return;
+    try {
+      const data = {
+        depth: game.depth,
+        width: game.width,
+        height: game.height,
+        map: game.map,
+        player: game.player,
+        entities: game.entities,
+        messages: game.messages.slice(-10),
+        turn: game.turn
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    } catch (e) {}
+  }
+
+  function loadGame() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (!data || !data.player) return null;
+      return data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function clearSave() {
+    try {
+      localStorage.removeItem(SAVE_KEY);
+    } catch (e) {}
+  }
+
+  function hasSave() {
+    return loadGame() !== null;
+  }
+
+  function updateContinueButton() {
+    const btn = document.getElementById("btn-continue");
+    if (!btn) return;
+    if (hasSave()) {
+      btn.hidden = false;
+    } else {
+      btn.hidden = true;
+    }
   }
 
   // ====================== MAP GENERATION ======================
@@ -403,11 +532,11 @@
 
     if (nx < 0 || nx >= g.width || ny < 0 || ny >= g.height) return;
 
-    // Wall collision + DevOps phase
     if (g.map[ny][nx] === TILE.WALL) {
       if (g.player.canWallPhase && g.player.wallPhaseLeft > 0) {
         g.player.wallPhaseLeft--;
         addMessage(g, "DevOps phase! Passed through wall.", "system");
+        sfx("phase");
       } else {
         return;
       }
@@ -427,6 +556,7 @@
       const dmg = g.player.atk + Math.floor(Math.random() * 3);
       monster.hp -= dmg;
       addMessage(g, "You hit the " + monster.name + " for " + dmg + "!", "damage");
+      sfx("hit");
 
       if (monster.hp <= 0) {
         addMessage(g, "You destroyed the " + monster.name + "! +" + monster.xp + " XP", "important");
@@ -448,6 +578,7 @@
         }
         g.player.hp -= mdmg;
         addMessage(g, "The " + monster.name + " hits you for " + mdmg + "!", "damage");
+        sfx("hurt");
         if (g.player.hp <= 0) {
           playerDied(g);
           return;
@@ -456,12 +587,14 @@
 
       g.turn++;
       render(g);
+      saveGame();
       return;
     }
 
     // Move
     g.player.x = nx;
     g.player.y = ny;
+    sfx("move");
 
     // Pickup
     let item = null;
@@ -488,6 +621,7 @@
         g.player.inventory.push({ name: item.name });
         addMessage(g, "Equipped " + item.name + "! ATK +" + item.atkBonus, "important");
       }
+      sfx("pickup");
 
       const newEntities = [];
       for (let i = 0; i < g.entities.length; i++) {
@@ -505,6 +639,7 @@
     monstersAct(g);
     g.turn++;
     render(g);
+    saveGame();
   }
 
   function monstersAct(g) {
@@ -543,6 +678,7 @@
         }
         g.player.hp -= mdmg;
         addMessage(g, "The " + m.name + " hits you for " + mdmg + "!", "damage");
+        sfx("hurt");
         if (g.player.hp <= 0) {
           playerDied(g);
           return;
@@ -573,6 +709,7 @@
       g.player.atk += 1;
       g.player.xpToNext = Math.floor(g.player.xpToNext * 1.4);
       addMessage(g, "★ LEVEL UP! You are now level " + g.player.level, "important");
+      sfx("levelup");
     }
   }
 
@@ -581,19 +718,22 @@
     addMessage(g, "Descending to depth " + g.depth + "...", "system");
     g.player.hp = Math.min(g.player.maxHp, g.player.hp + 4 + Math.floor(g.depth / 2));
 
-    // Reset DevOps wall phase
     if (g.player.canWallPhase) {
       g.player.wallPhaseLeft = 1;
     }
 
+    sfx("descend");
     generateMap(g);
     render(g);
+    saveGame();
   }
 
   function playerDied(g) {
     g.over = true;
     g.player.hp = 0;
     addMessage(g, "You have been consumed by technical debt...", "damage");
+    sfx("death");
+    clearSave();
     saveHighscore(g);
 
     const deathEl = document.getElementById("death-message");
@@ -606,6 +746,7 @@
     safeSet("final-level", g.player.level);
 
     showScreen("gameover-screen");
+    updateContinueButton();
   }
 
   // ====================== HIGHSCORE ======================
@@ -664,6 +805,7 @@
   }
 
   function startNewGame(classKey) {
+    clearSave();
     game = createGame(classKey);
     generateMap(game);
     game.messages = [];
@@ -677,6 +819,19 @@
 
     render(game);
     showScreen("game-screen");
+    saveGame();
+    updateContinueButton();
+  }
+
+  function continueGame() {
+    const data = loadGame();
+    if (!data) return;
+
+    game = data;
+    game.over = false;
+    render(game);
+    showScreen("game-screen");
+    addMessage(game, "Run continued.", "system");
   }
 
   // ====================== INPUT ======================
@@ -702,18 +857,24 @@
   // ====================== BUTTONS ======================
   function bind(id, fn) {
     const el = document.getElementById(id);
-    if (el) el.addEventListener("click", fn);
+    if (el) el.addEventListener("click", function () {
+      sfx("click");
+      fn();
+    });
   }
 
-  // Title → Class Select
   bind("btn-new-game", function () {
     showScreen("class-screen");
   });
 
-  // Class buttons
+  bind("btn-continue", function () {
+    continueGame();
+  });
+
   const classBtns = document.querySelectorAll(".class-btn");
   for (let i = 0; i < classBtns.length; i++) {
     classBtns[i].addEventListener("click", function () {
+      sfx("click");
       const cls = this.getAttribute("data-class");
       startNewGame(cls);
     });
@@ -729,6 +890,7 @@
 
   bind("btn-title", function () {
     showScreen("title-screen");
+    updateContinueButton();
   });
 
   bind("btn-how-to", function () {
@@ -758,6 +920,9 @@
       tryMove(game, dx, dy);
     });
   }
+
+  // Init
+  updateContinueButton();
 
   window.DEEPCOMMIT = {
     startNewGame: startNewGame,
