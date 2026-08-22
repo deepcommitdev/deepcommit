@@ -12,7 +12,7 @@
   <meta name="keywords" content="roguelike, ascii, programming, github, game, deepcommit, browser game" />
   <meta name="author" content="deepcommitdev" />
 
-  <!-- Open Graph / Social -->
+  <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="DEEPCOMMIT — ASCII Roguelike" />
   <meta property="og:description" content="Descend into the depths of broken code. A pure ASCII programming-themed roguelike." />
@@ -30,10 +30,6 @@
   <link rel="icon" href="https://pbs.twimg.com/profile_images/2090890526413451264/kjEut0dN_400x400.jpg" type="image/jpeg" />
   <link rel="apple-touch-icon" href="https://pbs.twimg.com/profile_images/2090890526413451264/kjEut0dN_400x400.jpg" />
   <link rel="stylesheet" href="style.css" />
-
-  <!-- Preload critical assets -->
-  <link rel="preload" href="style.css" as="style" />
-  <link rel="preload" href="game.js" as="script" />
 </head>
 <body>
   <div id="app" role="application" aria-label="DEEPCOMMIT Roguelike Game">
@@ -58,14 +54,14 @@
         <button id="btn-highscores" class="menu-btn" type="button">HIGHSCORES</button>
       </nav>
       
-      <p class="version">v0.1.0 — Pure ASCII Roguelike</p>
+      <p class="version">v0.2.2 — Pure ASCII Roguelike</p>
     </section>
 
     <!-- ===== HOW TO PLAY ===== -->
     <section id="howto-screen" class="screen" aria-label="How to Play" hidden>
       <h2>HOW TO PLAY</h2>
       <div class="howto-content">
-        <p><strong>Movement:</strong> WASD or Arrow Keys</p>
+        <p><strong>Movement:</strong> Use the arrow buttons or WASD / Arrow keys</p>
         <p><strong>Attack:</strong> Walk into monsters</p>
         <p><strong>Goal:</strong> Descend as deep as possible. Collect Stars ★</p>
         <br>
@@ -97,7 +93,8 @@
         <div class="map-area" aria-live="polite">
           <pre id="map" role="img" aria-label="Dungeon map"></pre>
         </div>
-        <aside class="side-panel" aria-label="Status Panel">
+
+        <div class="side-panel">
           <div class="status">
             <div class="stat-row"><span>DEPTH</span><span id="stat-depth">1</span></div>
             <div class="stat-row"><span>HP</span><span id="stat-hp">20/20</span></div>
@@ -118,10 +115,25 @@
             <div>$ Commit</div>
             <div>&gt; Stairs</div>
           </div>
-        </aside>
+        </div>
       </div>
-      <div id="message-log" class="message-log" aria-live="polite" aria-atomic="false"></div>
-      <div class="controls-hint">WASD / Arrows to move • Walk into enemies to attack</div>
+
+      <!-- Tutorial singkat -->
+      <div class="tutorial-bar">
+        Use the buttons below to move. Walk into enemies to attack. Find &gt; to go deeper.
+      </div>
+
+      <div id="message-log" class="message-log" aria-live="polite"></div>
+
+      <!-- D-Pad Buttons -->
+      <div class="dpad">
+        <button class="dpad-btn" data-dx="0" data-dy="-1" type="button">↑</button>
+        <div class="dpad-middle">
+          <button class="dpad-btn" data-dx="-1" data-dy="0" type="button">←</button>
+          <button class="dpad-btn" data-dx="1" data-dy="0" type="button">→</button>
+        </div>
+        <button class="dpad-btn" data-dx="0" data-dy="1" type="button">↓</button>
+      </div>
     </section>
 
     <!-- ===== GAME OVER ===== -->
