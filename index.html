@@ -1,1 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="DEEPCOMMIT — A programming-themed ASCII roguelike. Descend into the depths of broken code. Fight bugs, merge conflicts, and memory leaks." />
+  <meta name="keywords" content="roguelike, ascii, programming, github, game, deepcommit, browser game" />
+  <meta name="author" content="deepcommitdev" />
 
+  <!-- Open Graph / Social -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="DEEPCOMMIT — ASCII Roguelike" />
+  <meta property="og:description" content="Descend into the depths of broken code. A pure ASCII programming-themed roguelike." />
+  <meta property="og:image" content="https://pbs.twimg.com/profile_images/2090890526413451264/kjEut0dN_400x400.jpg" />
+  <meta property="og:url" content="https://deepcommitdev.github.io/deepcommit/" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="DEEPCOMMIT — ASCII Roguelike" />
+  <meta name="twitter:description" content="Descend into the depths of broken code." />
+  <meta name="twitter:image" content="https://pbs.twimg.com/profile_images/2090890526413451264/kjEut0dN_400x400.jpg" />
+
+  <title>DEEPCOMMIT — ASCII Roguelike</title>
+
+  <link rel="icon" href="https://pbs.twimg.com/profile_images/2090890526413451264/kjEut0dN_400x400.jpg" type="image/jpeg" />
+  <link rel="apple-touch-icon" href="https://pbs.twimg.com/profile_images/2090890526413451264/kjEut0dN_400x400.jpg" />
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Preload critical assets -->
+  <link rel="preload" href="style.css" as="style" />
+  <link rel="preload" href="game.js" as="script" />
+</head>
+<body>
+  <div id="app" role="application" aria-label="DEEPCOMMIT Roguelike Game">
+
+    <!-- ===== TITLE SCREEN ===== -->
+    <section id="title-screen" class="screen active" aria-label="Title Screen">
+      <div class="logo-container">
+        <img 
+          src="https://pbs.twimg.com/profile_images/2090890526413451264/kjEut0dN_400x400.jpg" 
+          alt="DEEPCOMMIT Logo" 
+          class="logo"
+          width="400"
+          height="400"
+          decoding="async"
+        />
+      </div>
+      <p class="tagline">Descend into the depths of broken code.</p>
+      
+      <nav class="menu" aria-label="Main Menu">
+        <button id="btn-new-game" class="menu-btn" type="button">NEW RUN</button>
+        <button id="btn-how-to" class="menu-btn" type="button">HOW TO PLAY</button>
+        <button id="btn-highscores" class="menu-btn" type="button">HIGHSCORES</button>
+      </nav>
+      
+      <p class="version">v0.1.0 — Pure ASCII Roguelike</p>
+    </section>
+
+    <!-- ===== HOW TO PLAY ===== -->
+    <section id="howto-screen" class="screen" aria-label="How to Play" hidden>
+      <h2>HOW TO PLAY</h2>
+      <div class="howto-content">
+        <p><strong>Movement:</strong> WASD or Arrow Keys</p>
+        <p><strong>Attack:</strong> Walk into monsters</p>
+        <p><strong>Goal:</strong> Descend as deep as possible. Collect Stars ★</p>
+        <br>
+        <p><span class="sym player">@</span> You (the Developer)</p>
+        <p><span class="sym wall">#</span> Wall / Solid code</p>
+        <p><span class="sym floor">.</span> Floor</p>
+        <p><span class="sym stairs">&gt;</span> Stairs to next depth</p>
+        <p><span class="sym bug">g</span> Bug</p>
+        <p><span class="sym merge">M</span> Merge Conflict</p>
+        <p><span class="sym leak">L</span> Memory Leak</p>
+        <p><span class="sym item">$</span> Commit (heal + stars)</p>
+        <p><span class="sym item">★</span> Star (score)</p>
+        <br>
+        <p>Die = Permadeath. Try to beat your highscore.</p>
+      </div>
+      <button id="btn-back-howto" class="menu-btn" type="button">BACK</button>
+    </section>
+
+    <!-- ===== HIGHSCORES ===== -->
+    <section id="highscore-screen" class="screen" aria-label="Highscores" hidden>
+      <h2>HIGHSCORES</h2>
+      <div id="highscore-list" class="highscore-list" role="list"></div>
+      <button id="btn-back-hs" class="menu-btn" type="button">BACK</button>
+    </section>
+
+    <!-- ===== GAME SCREEN ===== -->
+    <section id="game-screen" class="screen" aria-label="Game" hidden>
+      <div class="game-layout">
+        <div class="map-area" aria-live="polite">
+          <pre id="map" role="img" aria-label="Dungeon map"></pre>
+        </div>
+        <aside class="side-panel" aria-label="Status Panel">
+          <div class="status">
+            <div class="stat-row"><span>DEPTH</span><span id="stat-depth">1</span></div>
+            <div class="stat-row"><span>HP</span><span id="stat-hp">20/20</span></div>
+            <div class="stat-row"><span>LEVEL</span><span id="stat-level">1</span></div>
+            <div class="stat-row"><span>STARS</span><span id="stat-stars">0</span></div>
+            <div class="stat-row"><span>ATK</span><span id="stat-atk">3</span></div>
+          </div>
+          <div class="inventory">
+            <h3>INVENTORY</h3>
+            <div id="inv-list"></div>
+          </div>
+          <div class="legend">
+            <h3>LEGEND</h3>
+            <div>@ You</div>
+            <div>g Bug</div>
+            <div>M Merge</div>
+            <div>L Leak</div>
+            <div>$ Commit</div>
+            <div>&gt; Stairs</div>
+          </div>
+        </aside>
+      </div>
+      <div id="message-log" class="message-log" aria-live="polite" aria-atomic="false"></div>
+      <div class="controls-hint">WASD / Arrows to move • Walk into enemies to attack</div>
+    </section>
+
+    <!-- ===== GAME OVER ===== -->
+    <section id="gameover-screen" class="screen" aria-label="Game Over" hidden>
+      <h2>COMMIT FAILED</h2>
+      <p class="death-msg" id="death-message">You were consumed by technical debt.</p>
+      <div class="final-stats">
+        <div>Depth reached: <span id="final-depth">0</span></div>
+        <div>Stars collected: <span id="final-stars">0</span></div>
+        <div>Level: <span id="final-level">1</span></div>
+      </div>
+      <button id="btn-retry" class="menu-btn" type="button">NEW RUN</button>
+      <button id="btn-title" class="menu-btn secondary" type="button">TITLE SCREEN</button>
+    </section>
+
+  </div>
+
+  <script src="game.js" defer></script>
+</body>
+</html>
