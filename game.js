@@ -1,6 +1,6 @@
 /* ============================================
-   DEEPCOMMIT — Full Map Visible (Bomberman style)
-   v0.2.5  |  Pure Vanilla JS
+   DEEPCOMMIT — Full Visible Map + Troll Player
+   v0.2.6  |  Pure Vanilla JS
    ============================================ */
 
 (() => {
@@ -11,7 +11,7 @@
     WALL: "#",
     FLOOR: ".",
     STAIRS: ">",
-    PLAYER: "@",
+    PLAYER: "🧌",
     BUG: "g",
     MERGE: "M",
     LEAK: "L",
@@ -27,7 +27,7 @@
     "#": "#00aa2a",
     ".": "#1a3a1a",
     ">": "#00e5ff",
-    "@": "#ffffff",
+    "🧌": "#ffffff",
     "g": "#ff3333",
     "M": "#ff8800",
     "L": "#cc00ff",
@@ -58,8 +58,8 @@
   function createGame() {
     return {
       depth: 1,
-      width: 35,
-      height: 19,
+      width: 33,
+      height: 17,
       map: [],
       player: {
         x: 0,
@@ -94,12 +94,12 @@
     }
 
     const rooms = [];
-    const maxRooms = 6 + Math.floor(g.depth * 0.4);
+    const maxRooms = 5 + Math.floor(g.depth * 0.4);
     const attempts = maxRooms * 4;
 
     for (let i = 0; i < attempts && rooms.length < maxRooms; i++) {
       const rw = 4 + Math.floor(Math.random() * 5);
-      const rh = 3 + Math.floor(Math.random() * 4);
+      const rh = 3 + Math.floor(Math.random() * 3);
       const rx = 1 + Math.floor(Math.random() * (w - rw - 2));
       const ry = 1 + Math.floor(Math.random() * (h - rh - 2));
 
@@ -288,7 +288,7 @@
         let char = g.map[y][x];
         let color = COLORS[char] || "#00ff41";
 
-        // Entity override
+        // Entity
         for (let i = 0; i < g.entities.length; i++) {
           const e = g.entities[i];
           if (e.x === x && e.y === y) {
@@ -301,7 +301,7 @@
         // Player
         if (x === g.player.x && y === g.player.y) {
           char = TILE.PLAYER;
-          color = COLORS["@"];
+          color = COLORS["🧌"];
         }
 
         html += '<span style="color:' + color + '">' + char + "</span>";
