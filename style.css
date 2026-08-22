@@ -1,6 +1,6 @@
 /* ============================================
    DEEPCOMMIT — Mobile Optimized + D-Pad
-   v0.2.3
+   v0.2.4
    ============================================ */
 
 *,
@@ -220,16 +220,16 @@ h2 {
   align-items: center;
   justify-content: center;
   padding: 4px;
-  min-height: 38vh;
-  max-height: 46vh;
+  min-height: 32vh;
+  max-height: 38vh;
   touch-action: none;
   overscroll-behavior: none;
 }
 
 #map {
-  font-size: 13px;
-  line-height: 1.1;
-  letter-spacing: 0.3px;
+  font-size: 12px;
+  line-height: 1.08;
+  letter-spacing: 0.2px;
   margin: 0;
   white-space: pre;
   color: var(--green);
@@ -315,7 +315,7 @@ h2 {
 .message-log {
   background: var(--bg-panel);
   border: 1px solid var(--border);
-  height: 58px;
+  height: 52px;
   overflow-y: auto;
   padding: 6px 8px;
   font-size: 11px;
@@ -337,25 +337,26 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  margin-top: 10px;
-  margin-bottom: 8px;
+  gap: 5px;
+  margin-top: 8px;
+  margin-bottom: 10px;
   user-select: none;
   -webkit-user-select: none;
+  flex-shrink: 0;
 }
 
 .dpad-middle {
   display: flex;
-  gap: 52px;
+  gap: 46px;
 }
 
 .dpad-btn {
-  width: 58px;
-  height: 58px;
+  width: 54px;
+  height: 54px;
   background: #0a1a0a;
   border: 1px solid var(--green);
   color: var(--green);
-  font-size: 24px;
+  font-size: 22px;
   font-family: inherit;
   border-radius: 10px;
   cursor: pointer;
@@ -363,7 +364,6 @@ h2 {
   align-items: center;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.1s, color 0.1s;
 }
 
 .dpad-btn:active {
@@ -454,7 +454,7 @@ h2 {
   }
 
   .dpad {
-    display: none; /* hide d-pad on desktop, use keyboard */
+    display: none;
   }
 
   .tutorial-bar {
