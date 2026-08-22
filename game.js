@@ -1,6 +1,6 @@
 /* ============================================
-   DEEPCOMMIT — Super Advanced ASCII Roguelike
-   v0.2.3  |  Pure Vanilla JS  |  D-Pad Support
+   DEEPCOMMIT — Full Map Visible (Bomberman style)
+   v0.2.5  |  Pure Vanilla JS
    ============================================ */
 
 (() => {
@@ -58,11 +58,9 @@
   function createGame() {
     return {
       depth: 1,
-      width: 41,
-      height: 23,
+      width: 35,
+      height: 19,
       map: [],
-      visible: [],
-      explored: [],
       player: {
         x: 0,
         y: 0,
@@ -96,12 +94,12 @@
     }
 
     const rooms = [];
-    const maxRooms = 6 + Math.floor(g.depth * 0.5);
+    const maxRooms = 6 + Math.floor(g.depth * 0.4);
     const attempts = maxRooms * 4;
 
     for (let i = 0; i < attempts && rooms.length < maxRooms; i++) {
-      const rw = 5 + Math.floor(Math.random() * 6);
-      const rh = 4 + Math.floor(Math.random() * 4);
+      const rw = 4 + Math.floor(Math.random() * 5);
+      const rh = 3 + Math.floor(Math.random() * 4);
       const rx = 1 + Math.floor(Math.random() * (w - rw - 2));
       const ry = 1 + Math.floor(Math.random() * (h - rh - 2));
 
@@ -109,10 +107,10 @@
       for (let r = 0; r < rooms.length; r++) {
         const room = rooms[r];
         if (
-          rx < room.x + room.w + 2 &&
-          rx + rw + 2 > room.x &&
-          ry < room.y + room.h + 2 &&
-          ry + rh + 2 > room.y
+          rx < room.x + room.w + 1 &&
+          rx + rw + 1 > room.x &&
+          ry < room.y + room.h + 1 &&
+          ry + rh + 1 > room.y
         ) {
           overlaps = true;
           break;
@@ -154,18 +152,7 @@
     g.player.y = first.cy;
 
     g.map = map;
-    g.visible = [];
-    g.explored = [];
-    for (let y = 0; y < h; y++) {
-      g.visible[y] = [];
-      g.explored[y] = [];
-      for (let x = 0; x < w; x++) {
-        g.visible[y][x] = false;
-        g.explored[y][x] = false;
-      }
-    }
     g.entities = [];
-
     spawnEntities(g);
   }
 
@@ -196,8 +183,7 @@
       for (let x = 0; x < g.width; x++) {
         if (
           g.map[y][x] === TILE.FLOOR &&
-          !(x === g.player.x && y === g.player.y) &&
-          g.map[y][x] !== TILE.STAIRS
+          !(x === g.player.x && y === g.player.y)
         ) {
           floors.push({ x: x, y: y });
         }
@@ -213,7 +199,7 @@
     }
 
     let idx = 0;
-    const monsterCount = 3 + depth + Math.floor(Math.random() * 3);
+    const monsterCount = 3 + depth + Math.floor(Math.random() * 2);
     const itemCount = 2 + Math.floor(Math.random() * 2);
 
     // Monsters
@@ -291,54 +277,7 @@
     }
   }
 
-  // ====================== FOV ======================
-  function updateFOV(g) {
-    const radius = 6;
-    for (let y = 0; y < g.height; y++) {
-      for (let x = 0; x < g.width; x++) {
-        g.visible[y][x] = false;
-      }
-    }
-
-    for (let dy = -radius; dy <= radius; dy++) {
-      for (let dx = -radius; dx <= radius; dx++) {
-        if (dx * dx + dy * dy > radius * radius) continue;
-        const x = g.player.x + dx;
-        const y = g.player.y + dy;
-        if (x < 0 || x >= g.width || y < 0 || y >= g.height) continue;
-        if (hasLOS(g, g.player.x, g.player.y, x, y)) {
-          g.visible[y][x] = true;
-          g.explored[y][x] = true;
-        }
-      }
-    }
-  }
-
-  function hasLOS(g, x0, y0, x1, y1) {
-    let dx = Math.abs(x1 - x0);
-    let dy = Math.abs(y1 - y0);
-    let sx = x0 < x1 ? 1 : -1;
-    let sy = y0 < y1 ? 1 : -1;
-    let err = dx - dy;
-    let x = x0;
-    let y = y0;
-
-    while (true) {
-      if (x === x1 && y === y1) return true;
-      if (g.map[y][x] === TILE.WALL && !(x === x0 && y === y0)) return false;
-      const e2 = 2 * err;
-      if (e2 > -dy) {
-        err -= dy;
-        x += sx;
-      }
-      if (e2 < dx) {
-        err += dx;
-        y += sy;
-      }
-    }
-  }
-
-  // ====================== RENDER ======================
+  // ====================== RENDER (FULL VISIBLE) ======================
   function render(g) {
     const mapEl = document.getElementById("map");
     if (!mapEl) return;
@@ -346,34 +285,25 @@
     let html = "";
     for (let y = 0; y < g.height; y++) {
       for (let x = 0; x < g.width; x++) {
-        let char = " ";
-        let color = "#050505";
+        let char = g.map[y][x];
+        let color = COLORS[char] || "#00ff41";
 
-        if (!g.explored[y][x]) {
-          char = " ";
-          color = "#000";
-        } else if (!g.visible[y][x]) {
-          char = g.map[y][x] === TILE.WALL ? TILE.WALL : TILE.FLOOR;
-          color = "#0a1f0a";
-        } else {
-          char = g.map[y][x];
-          color = COLORS[char] || "#00ff41";
-
-          // Entity
-          for (let i = 0; i < g.entities.length; i++) {
-            const e = g.entities[i];
-            if (e.x === x && e.y === y) {
-              char = e.char;
-              color = COLORS[e.char] || "#fff";
-              break;
-            }
-          }
-
-          if (x === g.player.x && y === g.player.y) {
-            char = TILE.PLAYER;
-            color = COLORS["@"];
+        // Entity override
+        for (let i = 0; i < g.entities.length; i++) {
+          const e = g.entities[i];
+          if (e.x === x && e.y === y) {
+            char = e.char;
+            color = COLORS[e.char] || "#fff";
+            break;
           }
         }
+
+        // Player
+        if (x === g.player.x && y === g.player.y) {
+          char = TILE.PLAYER;
+          color = COLORS["@"];
+        }
+
         html += '<span style="color:' + color + '">' + char + "</span>";
       }
       html += "\n";
@@ -463,7 +393,6 @@
         g.player.stars += 1;
         g.player.kills += 1;
 
-        // Remove monster
         const newEntities = [];
         for (let i = 0; i < g.entities.length; i++) {
           if (g.entities[i] !== monster) newEntities.push(g.entities[i]);
@@ -471,7 +400,6 @@
         g.entities = newEntities;
         checkLevelUp(g);
       } else {
-        // Counter
         let mdmg = monster.atk;
         if (monster.special === "null" && Math.random() < 0.25) {
           mdmg = Math.floor(mdmg * 1.5);
@@ -486,7 +414,6 @@
       }
 
       g.turn++;
-      updateFOV(g);
       render(g);
       return;
     }
@@ -536,7 +463,6 @@
 
     monstersAct(g);
     g.turn++;
-    updateFOV(g);
     render(g);
   }
 
@@ -569,7 +495,6 @@
       if (nx < 0 || nx >= g.width || ny < 0 || ny >= g.height) continue;
       if (g.map[ny][nx] === TILE.WALL) continue;
 
-      // Attack player
       if (nx === g.player.x && ny === g.player.y) {
         let mdmg = m.atk;
         if (m.special === "null" && Math.random() < 0.2) {
@@ -584,7 +509,6 @@
         continue;
       }
 
-      // Check occupied
       let occupied = false;
       for (let j = 0; j < g.entities.length; j++) {
         if (g.entities[j].x === nx && g.entities[j].y === ny) {
@@ -616,7 +540,6 @@
     addMessage(g, "Descending to depth " + g.depth + "...", "system");
     g.player.hp = Math.min(g.player.maxHp, g.player.hp + 4 + Math.floor(g.depth / 2));
     generateMap(g);
-    updateFOV(g);
     render(g);
   }
 
@@ -694,7 +617,6 @@
   function startNewGame() {
     game = createGame();
     generateMap(game);
-    updateFOV(game);
     game.messages = [];
     addMessage(game, "Welcome to DEEPCOMMIT. Survive the codebase.", "system");
     addMessage(game, "Find the stairs > to descend deeper.", "system");
@@ -750,7 +672,6 @@
     });
   }
 
-  // Expose for debug
   window.DEEPCOMMIT = {
     startNewGame: startNewGame,
     getGame: function () { return game; }
