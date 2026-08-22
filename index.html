@@ -48,7 +48,31 @@
         <button id="btn-highscores" class="menu-btn" type="button">HIGHSCORES</button>
       </nav>
       
-      <p class="version">v0.2.6 — Pure ASCII Roguelike</p>
+      <p class="version">v0.3.0 — Class System</p>
+    </section>
+
+    <!-- CLASS SELECT -->
+    <section id="class-screen" class="screen" hidden>
+      <h2>CHOOSE YOUR CLASS</h2>
+      <div class="class-list">
+        <button class="class-btn" data-class="frontend" type="button">
+          <div class="class-name">Frontend</div>
+          <div class="class-desc">+8 Max HP<br>Starts with Coffee</div>
+        </button>
+        <button class="class-btn" data-class="backend" type="button">
+          <div class="class-name">Backend</div>
+          <div class="class-desc">+2 AT<br>Higher base damage</div>
+        </button>
+        <button class="class-btn" data-class="devops" type="button">
+          <div class="class-name">DevOps</div>
+          <div class="class-desc">+4 HP, +1 AT<br>Phase through 1 wall / depth</div>
+        </button>
+        <button class="class-btn" data-class="fullstack" type="button">
+          <div class="class-name">Fullstack</div>
+          <div class="class-desc">+5 HP, +1 AT<br>Balanced</div>
+        </button>
+      </div>
+      <button id="btn-back-class" class="menu-btn secondary" type="button">BACK</button>
     </section>
 
     <!-- HOW TO PLAY -->
