@@ -1,6 +1,6 @@
 /* ============================================
-   DEEPCOMMIT — Class System
-   v0.3.0
+   DEEPCOMMIT — Save + Sound
+   v0.3.1
    ============================================ */
 
 *,
@@ -129,6 +129,10 @@ html, body {
 .menu-btn.secondary:hover {
   background: var(--green-dim);
   color: #000;
+}
+
+.menu-btn[hidden] {
+  display: none !important;
 }
 
 .version {
